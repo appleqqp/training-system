@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>校內線上研習管理系統</title>
+  <style>
+    :root{
+      --primary:#1769aa;--primary-dark:#0f4f85;--primary-light:#eaf3fb;
+      --bg:#f3f6fa;--surface:#fff;--text:#1f2937;--muted:#6b7280;--border:#e2e8f0;
+      --success:#15803d;--success-bg:#ecfdf3;--danger:#c62828;--danger-bg:#fff1f1;
+      --warning:#b45309;--warning-bg:#fff7e8;--shadow:0 5px 20px rgba(31,41,55,.06)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text)}
+    button,input,select,textarea{font:inherit}
+    .header{min-height:70px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(120deg,var(--primary-dark),var(--primary));color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12);position:sticky;top:0;z-index:100}
+    .system-title{display:flex;align-items:center;gap:11px;font-size:19px;font-weight:700}
+    .system-logo{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,.16);font-size:19px}
+    .header-right{display:flex;align-items:center;gap:16px}.help-button{padding:8px 12px;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-weight:600;cursor:pointer}
+    .user-info{text-align:right}.user-name{font-size:14px;font-weight:700}.user-role{font-size:11px;color:rgba(255,255,255,.76);margin-top:2px}
+    .container{max-width:1080px;margin:36px auto;padding:0 24px}.welcome{padding:28px;margin-bottom:26px;border:1px solid #dbe8f5;border-radius:18px;background:linear-gradient(135deg,#fff,#edf6fd);box-shadow:var(--shadow)}
+    .welcome h1{margin:0 0 8px;font-size:28px}.welcome p{margin:0;color:var(--muted);line-height:1.7}
+    .admin-area{display:none;margin-bottom:26px}.admin-card{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 22px;background:#eef6fd;border:1px solid #cfe3f5;border-radius:14px}
+    .admin-title{font-weight:700;margin-bottom:4px}.admin-description{color:var(--muted);font-size:14px}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px}.summary-card{position:relative;overflow:hidden;padding:22px;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+    .summary-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}.summary-card.pending:before{background:#e67e22}.summary-card.completed:before{background:var(--success)}
+    .summary-label{color:var(--muted);font-size:13px;font-weight:600}.summary-number{margin-top:7px;font-size:31px;font-weight:750}.pending-number{color:#d97706}.completed-number{color:var(--success)}
+    .section-title{margin:0 0 15px;font-size:20px;font-weight:700}.training-list{display:flex;flex-direction:column;gap:14px}
+    .training-card,.admin-training-card{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:22px;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}.admin-training-card{margin-bottom:14px}
+    .training-main{flex:1;min-width:0}.training-title{margin-bottom:8px;font-size:18px;font-weight:700;line-height:1.45}.training-description{white-space:pre-wrap;color:#475569;font-size:13px;line-height:1.75;margin:8px 0 10px;padding:10px 12px;background:#f8fafc;border-radius:9px}
+    .training-meta{color:var(--muted);font-size:13px;line-height:1.8}.deadline-chip{display:inline-block;margin-left:7px;padding:3px 8px;border-radius:999px;background:#edf2f7;color:#64748b;font-size:12px;font-weight:600}.deadline-chip.soon{background:var(--warning-bg);color:var(--warning)}.deadline-chip.overdue{background:var(--danger-bg);color:var(--danger)}
+    .status{display:inline-block;margin-top:11px;padding:5px 10px;border-radius:999px;font-size:13px;font-weight:650}.status-pending{background:var(--warning-bg);color:var(--warning)}.status-completed{background:var(--success-bg);color:var(--success)}.status-inactive{background:#f1f5f9;color:#64748b}
+    .actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px;flex-shrink:0}.button{min-height:39px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:9px;font-size:13px;font-weight:650;text-decoration:none;cursor:pointer;transition:.15s}.button:disabled{opacity:.52;cursor:not-allowed}.button-primary{background:var(--primary);color:#fff}.button-primary:hover{background:var(--primary-dark)}.button-outline{background:#fff;border:1px solid #cbd5e1;color:#475569}.button-danger{background:#fff;border:1px solid #fecaca;color:#b91c1c}.button-success{background:#fff;border:1px solid #bbf7d0;color:#15803d}.small-button{min-height:32px;padding:0 10px;font-size:12px}
+    #adminPage,#trainingDetailPage,#helpPage{display:none}.admin-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}.admin-page-title{margin:0 0 5px;font-size:28px}.admin-page-description{color:var(--muted);font-size:14px}.back-button{padding:0;margin-bottom:16px;background:none;border:none;color:var(--primary);font-weight:650;cursor:pointer}
+    .progress-row{display:flex;align-items:center;gap:10px;margin-top:12px;max-width:420px}.progress-track{flex:1;height:7px;overflow:hidden;background:#e8edf3;border-radius:999px}.progress-bar{height:100%;background:var(--success)}.progress-text{min-width:74px;color:#475569;font-size:12px;font-weight:650}
+    .reminder-center,.action-panel{margin-bottom:20px;padding:20px;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}.reminder-center-header,.action-panel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}.panel-title{font-size:17px;font-weight:700;margin-bottom:4px}.panel-desc{color:var(--muted);font-size:13px;line-height:1.6}.system-badge{padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}.system-badge.off{background:#f1f5f9;color:#64748b}.system-badge.test{background:var(--warning-bg);color:var(--warning)}.system-badge.live{background:var(--success-bg);color:var(--success)}
+    .reminder-safety{padding:13px 15px;margin-bottom:16px;border-radius:10px;background:#f8fafc;color:#64748b;font-size:13px;line-height:1.7}.reminder-settings-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:15px;margin-bottom:16px}.reminder-actions,.panel-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}.selected-count{padding:6px 10px;border-radius:999px;background:var(--primary-light);color:var(--primary);font-size:12px;font-weight:700}
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.48);backdrop-filter:blur(2px);z-index:1000}.modal.show{display:flex}.modal-box{width:100%;max-width:560px;max-height:calc(100vh - 40px);overflow-y:auto;padding:27px;background:#fff;border-radius:17px;box-shadow:0 20px 60px rgba(15,23,42,.22)}.modal-box.large{max-width:720px}.modal-title{margin-bottom:7px;font-size:21px;font-weight:700}.modal-description{margin-bottom:21px;color:var(--muted);font-size:13px;line-height:1.7}
+    .form-group{margin-bottom:17px}.form-label{display:block;margin-bottom:7px;font-size:13px;font-weight:650}.form-control{width:100%;min-height:43px;padding:9px 12px;background:#fff;border:1px solid #cbd5e1;border-radius:9px;color:var(--text);font-size:14px;outline:none}.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(23,105,170,.1)}textarea.form-control{min-height:110px;resize:vertical;line-height:1.6}.checkbox-row{display:flex;align-items:center;gap:9px;font-size:14px}.checkbox-row input{width:18px;height:18px}.form-hint{margin-top:6px;color:#94a3b8;font-size:12px;line-height:1.5}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:23px}.form-error,.upload-error,.warning-box,.info-box{padding:12px 14px;margin-top:13px;border-radius:9px;font-size:13px;line-height:1.65}.form-error,.warning-box{background:var(--danger-bg);color:var(--danger)}.info-box{background:#eef6fd;color:#365a73}
+    .file-area{display:block;padding:29px 20px;border:2px dashed #cbd5e1;border-radius:12px;text-align:center;cursor:pointer}.file-area:hover{border-color:var(--primary);background:#f8fbfe}.file-area input{display:none}.file-area-title{font-weight:650;margin-bottom:5px}.file-name{color:var(--muted);font-size:12px;word-break:break-all}
+    .detail-header{padding:23px;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}.detail-title{margin:0 0 9px;font-size:24px}.detail-meta{color:var(--muted);font-size:13px;line-height:1.9}.detail-description{white-space:pre-wrap;margin-top:12px;padding:12px 14px;background:#f8fafc;border-radius:10px;color:#475569;font-size:13px;line-height:1.75}
+    .member-table-wrapper{overflow-x:auto;background:#fff;border:1px solid var(--border);border-radius:15px;box-shadow:var(--shadow)}.member-table{width:100%;min-width:1050px;border-collapse:collapse}.member-table th,.member-table td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}.member-table th{background:#f8fafc;color:#64748b;font-weight:650}.member-table tr:last-child td{border-bottom:none}.member-name{font-weight:650}.member-email{margin-top:2px;color:#94a3b8;font-size:11px}.member-status.pending{color:var(--warning);font-weight:650}.member-status.completed{color:var(--success);font-weight:650}.member-check{width:17px;height:17px;cursor:pointer}.member-check:disabled{opacity:.35;cursor:default}.reminder-today-note{display:inline-block;padding:3px 7px;border-radius:999px;background:var(--warning-bg);color:var(--warning);font-size:11px;font-weight:650}.no-reminder-note{color:#94a3b8;font-size:12px}
+    .preview-list{max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:11px}.preview-person{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 13px;border-bottom:1px solid var(--border)}.preview-person:last-child{border-bottom:none}.preview-name{font-size:13px;font-weight:650}.preview-email{margin-top:2px;color:#94a3b8;font-size:11px}
+    .help-card{padding:26px;margin-bottom:17px;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}.help-card-title{margin:0 0 15px;font-size:19px}.help-step{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid #edf2f7}.help-step:last-child{border-bottom:none}.help-number{width:31px;height:31px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--primary-light);border-radius:50%;color:var(--primary);font-weight:700}.help-step-title{margin-bottom:4px;font-weight:650}.help-step-text{color:var(--muted);font-size:13px;line-height:1.7}.help-notice{padding:20px;margin-bottom:17px;background:var(--warning-bg);border:1px solid #f7d9a7;border-radius:14px}.help-notice-title{margin-bottom:7px;font-weight:700}.help-notice-text{color:#66543c;font-size:13px;line-height:1.8}
+    .loading{padding:70px 20px;text-align:center;color:var(--muted)}.empty{padding:42px 20px;background:#fff;border:1px dashed #cbd5e1;border-radius:14px;text-align:center;color:var(--muted);line-height:1.7}.error{max-width:700px;margin:50px auto;padding:28px;background:#fff;border:1px solid #fecaca;border-radius:15px;color:var(--danger)}
+    .toast{position:fixed;top:22px;left:50%;transform:translate(-50%,-15px);display:flex;align-items:center;gap:9px;min-width:280px;max-width:calc(100vw - 30px);padding:13px 18px;background:#fff;border:1px solid var(--border);border-radius:11px;box-shadow:0 8px 30px rgba(15,23,42,.16);font-size:14px;font-weight:650;opacity:0;visibility:hidden;transition:.2s;z-index:3000}.toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}.toast-icon{width:23px;height:23px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;background:var(--success-bg);color:var(--success)}.toast.error-toast .toast-icon{background:var(--danger-bg);color:var(--danger)}
+    @media(max-width:720px){.header{padding:11px 15px;position:static}.system-logo{display:none}.system-title{font-size:15px}.header-right{gap:6px}.help-button{padding:6px 8px;font-size:12px}.user-name{font-size:12px}.user-role{font-size:10px}.container{margin-top:22px;padding:0 14px}.welcome{padding:21px}.welcome h1{font-size:23px}.summary{grid-template-columns:repeat(3,1fr);gap:8px}.summary-card{padding:15px 12px}.summary-number{font-size:25px}.training-card,.admin-training-card,.admin-card,.admin-toolbar,.reminder-center-header,.action-panel-header{flex-direction:column;align-items:stretch}.actions,.panel-actions,.reminder-actions{justify-content:stretch}.actions .button,.panel-actions .button{flex:1}.reminder-settings-grid{grid-template-columns:1fr}.modal-actions .button{flex:1}.toast{top:14px;width:calc(100vw - 28px);min-width:0}}
+    .login-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.48);backdrop-filter:blur(2px);z-index:2000}
+    .login-overlay.show{display:flex}
+    .login-card{width:100%;max-width:380px;padding:30px 26px;border-radius:18px;background:#fff;box-shadow:0 20px 50px rgba(15,23,42,.25);text-align:center}
+    .login-card h2{margin:0 0 8px;font-size:21px}.login-card p{margin:0 0 20px;color:var(--muted);font-size:14px;line-height:1.7}
+    .login-message{display:none;margin:0 0 16px;padding:10px 12px;border-radius:10px;background:var(--danger-bg);color:var(--danger);font-size:13px;text-align:left}
+    #googleSignInButton{display:flex;justify-content:center;min-height:44px}
+    .sync-status{font-size:12px;color:rgba(255,255,255,.8)}
+  </style>
+  <script src="config.js"></script>
+  <script src="auth-api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div id="loginOverlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="login-card">
+      <div class="system-logo" style="margin:0 auto 14px;background:var(--primary-light);color:var(--primary)">✓</div>
+      <h2 id="loginTitle">校內線上研習管理系統</h2>
+      <p>請使用學校 Google 帳號（@mail.nhps.tc.edu.tw）登入。</p>
+      <div id="loginMessage" class="login-message"></div>
+      <div id="googleSignInButton"></div>
+    </div>
+  </div>
+  <div id="loading" class="loading">正在載入您的研習資料……</div>
+  <div id="errorArea" class="error" style="display:none"><h2>無法載入系統</h2><div id="errorMessage"></div></div>
+
+  <div id="app" style="display:none">
+    <header class="header">
+      <div class="system-title"><div class="system-logo">✓</div>校內線上研習管理系統</div>
+      <div class="header-right">
+        <span id="syncStatus" class="sync-status" aria-live="polite"></span><button class="help-button" onclick="openHelpPage()">使用說明</button><button class="help-button" onclick="auth.logout()">登出</button>
+        <div class="user-info"><div id="headerUserName" class="user-name"></div><div id="headerUserRole" class="user-role"></div></div>
+      </div>
+    </header>
+
+    <main id="dashboardPage" class="container">
+      <section class="welcome"><h1 id="welcomeTitle">我的研習</h1><p id="welcomeDescription">這裡會整理目前需要完成的研習。</p></section>
+      <section id="adminArea" class="admin-area"><div class="admin-card"><div><div class="admin-title">研習管理</div><div class="admin-description">發布、修改研習，查看完成狀況與管理提醒。</div></div><button class="button button-primary" onclick="openAdminPage()">進入研習管理</button></div></section>
+      <section class="summary">
+        <div class="summary-card pending"><div class="summary-label">待完成</div><div id="pendingCount" class="summary-number pending-number">0</div></div>
+        <div class="summary-card completed"><div class="summary-label">已完成</div><div id="completedCount" class="summary-number completed-number">0</div></div>
+        <div class="summary-card"><div class="summary-label">全部研習</div><div id="totalCount" class="summary-number">0</div></div>
+      </section>
+      <section><div class="section-title">我的研習</div><div id="trainingList" class="training-list"></div></section>
+    </main>
+
+    <main id="adminPage" class="container">
+      <button class="back-button" onclick="backToDashboard()">← 回到我的研習</button>
+      <div class="admin-toolbar"><div><h1 class="admin-page-title">研習管理</h1><div class="admin-page-description">發布、修改研習並管理提醒。</div></div><button class="button button-primary" onclick="openCreateTrainingModal()">＋ 新增研習</button></div>
+
+      <section class="reminder-center">
+        <div class="reminder-center-header"><div><div class="panel-title">自動提醒中心</div><div class="panel-desc">系統每天約 07:30 檢查是否有研習到達提醒日期。</div></div><span id="reminderSystemStatus" class="system-badge off">尚未啟用</span></div>
+        <div id="reminderSafetyText" class="reminder-safety">自動提醒目前關閉。</div>
+        <div class="reminder-settings-grid">
+          <div><label class="form-label">測試收件信箱</label><input id="globalTestEmail" class="form-control" type="email"><div class="form-hint">測試模式只會寄到這個信箱。</div></div>
+          <div><label class="form-label">單次寄信安全上限</label><input id="globalMaxPerRun" class="form-control" type="number" min="1" max="200" value="80"><div class="form-hint">自動提醒與立即提醒都遵守這個上限。</div></div>
+        </div>
+        <div class="form-group"><label class="checkbox-row"><input id="globalTestMode" type="checkbox" checked> 啟用自動提醒測試模式</label></div>
+        <div class="reminder-actions"><button class="button button-outline" onclick="saveGlobalReminderSettings()">儲存提醒設定</button><button id="reminderMasterButton" class="button button-primary" onclick="toggleReminderMaster()">啟用自動提醒</button></div>
+      </section>
+
+      <div id="adminTrainingList"></div>
+    </main>
+
+    <main id="trainingDetailPage" class="container">
+      <button class="back-button" onclick="backToAdminPage()">← 回到研習管理</button>
+      <div id="trainingDetailHeader"></div>
+      <section class="summary" style="margin-top:25px">
+        <div class="summary-card pending"><div class="summary-label">尚未完成</div><div id="detailPendingCount" class="summary-number pending-number">0</div></div>
+        <div class="summary-card completed"><div class="summary-label">已完成</div><div id="detailCompletedCount" class="summary-number completed-number">0</div></div>
+        <div class="summary-card"><div class="summary-label">應完成人數</div><div id="detailTotalCount" class="summary-number">0</div></div>
+      </section>
+
+      <section id="manualReminderPanel" class="action-panel">
+        <div class="action-panel-header"><div><div class="panel-title">立即提醒</div><div class="panel-desc">勾選尚未完成的老師，可立即寄送研習提醒。</div></div><span id="selectedReminderCount" class="selected-count">已選 0 人</span></div>
+        <div class="panel-actions"><button class="button button-outline" onclick="selectAllPendingMembers()">全選尚未完成</button><button class="button button-outline" onclick="clearManualReminderSelection()">取消選取</button><button id="sendSelectedReminderButton" class="button button-primary" disabled onclick="openManualReminderPreview()">立即提醒所選老師</button></div>
+      </section>
+
+      <section id="rejectPanel" class="action-panel">
+        <div class="action-panel-header"><div><div class="panel-title">錯誤證明退件</div><div class="panel-desc">勾選已上傳錯誤證明的老師，可刪除錯誤檔案並恢復為尚未完成。</div></div><span id="selectedRejectCount" class="selected-count">已選 0 人</span></div>
+        <div class="panel-actions"><button class="button button-outline" onclick="selectAllRejectableMembers()">全選可退件</button><button class="button button-outline" onclick="clearRejectSelection()">取消選取</button><button id="rejectSelectedButton" class="button button-danger" disabled onclick="openRejectPreview()">退回所選證明</button></div>
+      </section>
+
+      <div id="trainingMemberList"></div>
+    </main>
+
+    <main id="helpPage" class="container">
+      <button class="back-button" onclick="closeHelpPage()">← 返回</button>
+      <section class="welcome"><h1>使用說明</h1><p>第一次使用也沒關係，照下面幾個步驟即可完成。</p></section>
+      <section class="help-card"><h2 class="help-card-title">如何完成一場研習？</h2>
+        <div class="help-step"><div class="help-number">1</div><div><div class="help-step-title">找到需要完成的研習</div><div class="help-step-text">首頁會列出目前需要完成的研習與說明。</div></div></div>
+        <div class="help-step"><div class="help-number">2</div><div><div class="help-step-title">點選「前往研習」</div><div class="help-step-text">依照研習說明完成外部網站提供的課程。</div></div></div>
+        <div class="help-step"><div class="help-number">3</div><div><div class="help-step-title">回到本系統登記</div><div class="help-step-text">需要證明就上傳證明，不需要證明則按「我已完成研習」。</div></div></div>
+        <div class="help-step"><div class="help-number">4</div><div><div class="help-step-title">確認完成</div><div class="help-step-text">看到綠色完成狀態就代表系統已收到紀錄。</div></div></div>
+      </section>
+      <section class="help-notice"><div class="help-notice-title">從 LINE 點開顯示無法開啟？</div><div class="help-notice-text">請使用學校 <strong>@mail.nhps.tc.edu.tw</strong> Google 帳號登入。<br><br><a class="button button-primary" href="https://accounts.google.com/AccountChooser?continue=https%3A%2F%2Fscript.google.com%2Fa%2Fmacros%2Fmail.nhps.tc.edu.tw%2Fs%2FAKfycbyXe4Vnl6w1zLY3tHuIS7KiJHnuzhFYVd1qT4g06Eldqa9ogIgY14kU51BTdfBMu9tF%2Fexec" target="_top">重新選擇 Google 帳號</a></div></section>
+    </main>
+  </div>
+
+  <!-- 上傳證明 -->
+  <div id="uploadModal" class="modal"><div class="modal-box"><div class="modal-title">上傳研習證明</div><div id="uploadTrainingTitle" class="modal-description"></div>
+    <form id="uploadForm" onsubmit="submitCertificate(event)"><input type="hidden" id="uploadTrainingId" name="trainingId"><input type="hidden" id="uploadTargetEmail" name="targetEmail"><input type="hidden" id="uploadExpectedFileId" name="expectedFileId"><input type="hidden" id="uploadRequestId" name="requestId"><div id="uploadReplacementNotice" class="warning-box" style="display:none"></div>
+      <label class="file-area"><input type="file" id="certificateFile" name="certificateFile" accept=".pdf,.jpg,.jpeg,.png" required onchange="showSelectedFile()"><div class="file-area-title">選擇證明檔案</div><div id="selectedFileName" class="file-name">PDF、JPG 或 PNG，最大 10 MB</div></label>
+      <div id="uploadError" class="upload-error" style="display:none"></div>
+      <div class="modal-actions"><button type="button" class="button button-outline" onclick="closeUploadModal()">取消</button><button type="submit" id="uploadSubmitButton" class="button button-primary">上傳證明</button></div>
+    </form>
+  </div></div>
+
+  <!-- 新增研習 -->
+  <div id="createTrainingModal" class="modal"><div class="modal-box"><div class="modal-title">新增研習</div><div class="modal-description">可在說明欄告訴老師本次研習要注意的事項。</div>
+    <form id="createTrainingForm" onsubmit="submitCreateTraining(event)">
+      <div class="form-group"><label class="form-label">研習名稱</label><input id="newTrainingTitle" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">研習說明</label><textarea id="newTrainingDescription" class="form-control" placeholder="例如：請完成第一至第三單元，通過測驗後下載 PDF 證書並回本系統上傳。"></textarea><div class="form-hint">可留白，支援換行。</div></div>
+      <div class="form-group"><label class="form-label">研習網址</label><input id="newTrainingUrl" class="form-control" type="url" required></div>
+      <div class="form-group"><label class="form-label">截止日期</label><input id="newTrainingDeadline" class="form-control" type="date" required></div>
+      <div class="form-group"><label class="form-label">研習對象</label><select id="newTrainingTarget" class="form-control" required><option value="ALL">全部人員</option></select></div>
+      <div class="form-group"><label class="checkbox-row"><input id="newTrainingCertificate" type="checkbox" checked> 需要上傳研習證明</label></div>
+      <hr style="border:0;border-top:1px solid #e2e8f0;margin:22px 0">
+      <div class="form-group"><label class="checkbox-row"><input id="newReminderEnabled" type="checkbox"> 啟用這場研習的自動提醒</label></div>
+      <div class="form-group"><label class="form-label">截止前幾天提醒</label><input id="newReminderDays" class="form-control" type="number" min="0" max="60" value="7"></div>
+      <div id="createTrainingError" class="form-error" style="display:none"></div>
+      <div class="modal-actions"><button type="button" class="button button-outline" onclick="closeCreateTrainingModal()">取消</button><button type="submit" id="createTrainingButton" class="button button-primary">發布研習</button></div>
+    </form>
+  </div></div>
+
+  <!-- 編輯研習 -->
+  <div id="editTrainingModal" class="modal"><div class="modal-box"><div class="modal-title">編輯研習</div><div id="editTrainingSubtitle" class="modal-description"></div>
+    <form id="editTrainingForm" onsubmit="submitEditTraining(event)"><input type="hidden" id="editTrainingId">
+      <div class="form-group"><label class="form-label">研習名稱</label><input id="editTrainingTitle" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">研習說明</label><textarea id="editTrainingDescription" class="form-control"></textarea></div>
+      <div class="form-group"><label class="form-label">研習網址</label><input id="editTrainingUrl" class="form-control" type="url" required></div>
+      <div class="form-group"><label class="form-label">截止日期</label><input id="editTrainingDeadline" class="form-control" type="date" required></div>
+      <div class="form-group"><label class="form-label">研習對象</label><select id="editTrainingTarget" class="form-control" required></select></div>
+      <div class="form-group"><label class="checkbox-row"><input id="editTrainingCertificate" type="checkbox"> 需要上傳研習證明</label><div id="editCertificateHint" class="form-hint"></div></div>
+      <hr style="border:0;border-top:1px solid #e2e8f0;margin:22px 0">
+      <div class="form-group"><label class="checkbox-row"><input id="editReminderEnabled" type="checkbox"> 啟用這場研習的自動提醒</label></div>
+      <div class="form-group"><label class="form-label">截止前幾天提醒</label><input id="editReminderDays" class="form-control" type="number" min="0" max="60"></div>
+      <div id="editTrainingError" class="form-error" style="display:none"></div>
+      <div class="modal-actions"><button type="button" class="button button-outline" onclick="closeEditTrainingModal()">取消</button><button type="submit" id="editTrainingButton" class="button button-primary">儲存修改</button></div>
+    </form>
+  </div></div>
+
+  <!-- 單場提醒設定 -->
+  <div id="trainingReminderModal" class="modal"><div class="modal-box"><div class="modal-title">自動提醒設定</div><div id="trainingReminderTitle" class="modal-description"></div><input type="hidden" id="trainingReminderId">
+    <div class="form-group"><label class="checkbox-row"><input id="trainingReminderEnabled" type="checkbox"> 啟用這場研習的自動提醒</label></div>
+    <div class="form-group"><label class="form-label">截止前幾天提醒</label><input id="trainingReminderDays" class="form-control" type="number" min="0" max="60" value="7"></div>
+    <div class="modal-actions"><button class="button button-outline" onclick="closeTrainingReminderModal()">取消</button><button class="button button-primary" onclick="saveTrainingReminder()">儲存設定</button></div>
+  </div></div>
+
+  <!-- 自動提醒預覽 -->
+  <div id="reminderPreviewModal" class="modal"><div class="modal-box large"><div class="modal-title">自動提醒名單預覽</div><div id="reminderPreviewContent"></div><input type="hidden" id="previewTrainingId"><div class="modal-actions"><button class="button button-outline" onclick="closeReminderPreviewModal()">關閉</button><button id="sendTestReminderButton" class="button button-primary" onclick="sendReminderTest()">寄送測試摘要給我</button></div></div></div>
+
+  <!-- 立即提醒確認 -->
+  <div id="manualReminderModal" class="modal"><div class="modal-box large"><div class="modal-title">確認立即寄送</div><div class="warning-box"><strong>注意：</strong>立即提醒是管理員手動正式寄送，不受自動提醒測試模式影響。</div><div id="manualReminderPreviewContent"></div><div class="modal-actions"><button class="button button-outline" onclick="closeManualReminderModal()">返回修改</button><button id="confirmManualReminderButton" class="button button-danger" onclick="confirmManualReminderSend()">確認寄送</button></div></div></div>
+
+  <!-- 退件確認 -->
+  <div id="rejectModal" class="modal"><div class="modal-box large"><div class="modal-title">退回錯誤研習證明</div><div class="modal-description">系統會把老師恢復為尚未完成，並將錯誤檔案移到垃圾桶。</div><div id="rejectPreviewContent"></div>
+    <div class="form-group"><label class="form-label">退件原因</label><textarea id="rejectReason" class="form-control" placeholder="例如：上傳的檔案不是本次研習證明。"></textarea><div class="form-hint">選填。若選擇寄信通知，這段文字會出現在退件通知中。</div></div>
+    <div class="form-group"><label class="checkbox-row"><input id="rejectNotify" type="checkbox"> 寄信通知老師</label><div class="form-hint">預設不勾選，避免誤寄。</div></div>
+    <div class="modal-actions"><button class="button button-outline" onclick="closeRejectModal()">取消</button><button id="confirmRejectButton" class="button button-danger" onclick="confirmRejectSubmissions()">確認退件</button></div>
+  </div></div>
+
+  <div id="toast" class="toast"><div id="toastIcon" class="toast-icon">✓</div><div id="toastMessage"></div></div>
+
+  <details id="readTimingPanel" hidden style="margin:16px auto;max-width:1100px;padding:12px;background:#fff;border:1px solid #ddd;border-radius:8px">
+    <summary>讀取耗時診斷（最高管理員）</summary>
+    <p>僅保留本頁最近 6 次成功讀取。單位為毫秒；可選取下方文字複製回報，不含教師資料。</p>
+    <p>schema：欄位檢查與補齊；readParse：資料讀取與解析；compute：組合與統計；serverTotal：後端總計；rpc：前端往返；render：JavaScript 更新畫面（不含瀏覽器繪製）；unclassified：rpc 減 serverTotal 的估計值，無法分離網路或 Google 內部等待。首次 HTML 載入不在此計時範圍。</p>
+    <textarea id="readTimingOutput" readonly rows="8" aria-label="讀取耗時數值" style="width:100%;box-sizing:border-box;font-family:monospace"></textarea>
+  </details>
+  <script>
+    let readTimingRows=[];
+    function clearReadTiming_(){
+      readTimingRows=[];
+      document.getElementById('readTimingPanel').hidden=true;
+      document.getElementById('readTimingOutput').value='';
+    }
+    function timedReadSuccess_(stage,render){
+      const started=performance.now();
+      return data=>{
+        const arrived=performance.now();
+        const d=data&&data._diagnostics;
+        const fields=['schemaMs','readParseMs','computeMs','totalMs'];
+        const valid=['dashboard','admin','detail'].includes(stage)&&d&&Object.keys(d).length===fields.length&&fields.every(k=>typeof d[k]==='number'&&Number.isFinite(d[k])&&d[k]>=0&&d[k]<=86400000);
+        if(!valid)clearReadTiming_();
+        const renderStart=performance.now();
+        try{render(data)}catch(error){clearReadTiming_();throw error}
+        const renderMs=Math.max(0,performance.now()-renderStart);
+        if(!valid)return;
+        const rpc=Math.max(0,arrived-started);
+        // Keep only fixed labels and numeric measurements, never the response object.
+        readTimingRows.push([stage,d.schemaMs,d.readParseMs,d.computeMs,d.totalMs,rpc,renderMs,Math.max(0,rpc-d.totalMs)].map((v,i)=>i===0?v:Math.round(v)).join('\t'));
+        readTimingRows=readTimingRows.slice(-6);
+        document.getElementById('readTimingOutput').value='stage\tschema\treadParse\tcompute\tserverTotal\trpc\trender\tunclassified\n'+readTimingRows.join('\n');
+        document.getElementById('readTimingPanel').hidden=false;
+      };
+    }
+    function timedReadFailure_(handler){return error=>{clearReadTiming_();handler(error)}}
+
+    let currentTrainings=[];
+    let canUploadForTeacher=false;
+    let uploadDelegated=false;
+    let uploadBusy=false;
+    let uploadAttempted=false;
+    let uploadFileChanged=false;
+    let currentAdminTrainings=[];
+    let currentDetailTraining=null;
+    let currentDetailMembers=[];
+    let currentReminderSettings=null;
+    let adminGroups=[];
+    let pageBeforeHelp='dashboardPage';
+    let toastTimer=null;
+    let pendingManualRecipients=[];
+    let pendingManualTrainingId='';
+    let pendingManualRequestId='';
+    let pendingRejectRecipients=[];
+    let pendingRejectTrainingId='';
+
+    // 先顯示上次的首頁資料（存在這台瀏覽器），同時向伺服器取最新資料。
+    let showingCachedDashboard=false;
+    window.addEventListener('load',()=>{
+      const cached=dashboardCache.read();
+      if(cached){showingCachedDashboard=true;renderDashboard(cached);setSyncStatus('更新中…')}
+      loadDashboard();
+    });
+    function setSyncStatus(text){const el=document.getElementById('syncStatus');if(el)el.textContent=text}
+
+    function loadDashboard(){
+      api.run.withSuccessHandler(timedReadSuccess_('dashboard',data=>{
+        showingCachedDashboard=false;setSyncStatus('');
+        dashboardCache.save(data);renderDashboard(data);
+      })).withFailureHandler(timedReadFailure_(error=>{
+        if(showingCachedDashboard){setSyncStatus('無法更新');showToast('無法更新資料：'+getErrorMessage(error),'error');return}
+        showSystemError(error);
+      })).getDashboardData();
+    }
+
+    function renderDashboard(data){
+      document.getElementById('loading').style.display='none';
+      if(!data||!data.success){showError(data&&data.message?data.message:'目前無法進入系統。');return;}
+      const u=data.user,s=data.summary;
+      currentTrainings=data.trainings||[];
+      document.getElementById('headerUserName').textContent=u.name;
+      document.getElementById('headerUserRole').textContent=u.canUploadForTeacher?'最高管理員':u.role==='admin'?'系統管理員':u.group;
+      document.getElementById('welcomeTitle').textContent=u.name+'，您好';
+      document.getElementById('welcomeDescription').textContent=s.pending===0?'目前沒有待完成的研習。':'目前還有 '+s.pending+' 項研習等您完成。';
+      document.getElementById('adminArea').style.display=u.role==='admin'?'block':'none';
+      document.getElementById('pendingCount').textContent=s.pending;
+      document.getElementById('completedCount').textContent=s.completed;
+      document.getElementById('totalCount').textContent=s.total;
+      renderTrainings(currentTrainings);
+      document.getElementById('app').style.display='block';
+    }
+
+    function renderTrainings(trainings){
+      const c=document.getElementById('trainingList');c.innerHTML='';
+      if(!trainings.length){c.innerHTML='<div class="empty">目前沒有需要完成的研習。</div>';return;}
+      trainings.forEach(t=>{
+        const card=document.createElement('div');card.className='training-card';
+        const d=getDeadlineInfo(t.deadline);
+        const desc=t.description?`<div class="training-description">${escapeHtml(t.description)}</div>`:'';
+        const status=t.completed
+          ?`<div class="status status-completed">${t.requireCertificate?'✓ 已繳交證明':'✓ 已完成研習'}${t.completedAt?' · '+escapeHtml(t.completedAt):''}</div>`
+          :`<div class="status status-pending">${t.requireCertificate?'尚未繳交證明':'尚未完成'}</div>`;
+        let action='';
+        if(t.requireCertificate){action=`<button class="button button-primary" onclick="openUploadModal('${escapeJs(t.id)}')">${t.completed?'重新上傳':'上傳證明'}</button>`;}
+        else if(!t.completed){action=`<button class="button button-primary" onclick="markTrainingComplete('${escapeJs(t.id)}',this)">我已完成研習</button>`;}
+        card.innerHTML=`<div class="training-main"><div class="training-title">${escapeHtml(t.title)}</div>${desc}<div class="training-meta">截止日期：${escapeHtml(formatDate(t.deadline))}<span class="deadline-chip ${d.className}">${escapeHtml(d.text)}</span></div>${status}</div><div class="actions"><a class="button button-outline" href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer">前往研習</a>${action}</div>`;
+        c.appendChild(card);
+      });
+    }
+
+    function markTrainingComplete(id,button){
+      button.disabled=true;button.textContent='處理中…';
+      api.run.withSuccessHandler(()=>{showToast('研習已標記完成');loadDashboard();}).withFailureHandler(e=>{button.disabled=false;button.textContent='我已完成研習';showToast(getErrorMessage(e),'error');}).markTrainingCompleted(id);
+    }
+
+    function openAdminPage(){hideAllPages();document.getElementById('adminPage').style.display='block';loadAdminData();window.scrollTo(0,0)}
+    function backToDashboard(){hideAllPages();document.getElementById('dashboardPage').style.display='block';loadDashboard();window.scrollTo(0,0)}
+
+    function loadAdminData(){
+      document.getElementById('adminTrainingList').innerHTML='<div class="loading">正在載入研習管理資料……</div>';
+      api.run.withSuccessHandler(timedReadSuccess_('admin',renderAdminData)).withFailureHandler(timedReadFailure_(e=>{document.getElementById('adminTrainingList').innerHTML=`<div class="error">${escapeHtml(getErrorMessage(e))}</div>`;})).getAdminData();
+    }
+
+    function renderAdminData(data){
+      currentAdminTrainings=data.trainings||[];adminGroups=data.groups||[];currentReminderSettings=data.reminderSettings;
+      renderReminderCenter(currentReminderSettings);fillTargetSelect('newTrainingTarget','ALL');renderAdminTrainings(currentAdminTrainings);
+    }
+
+    function fillTargetSelect(id,selected){
+      const s=document.getElementById(id);s.innerHTML='<option value="ALL">全部人員</option>';
+      adminGroups.forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;s.appendChild(o)});
+      if(selected!==undefined)s.value=selected;
+    }
+
+    function renderReminderCenter(s){
+      document.getElementById('globalTestEmail').value=s.testEmail||'';
+      document.getElementById('globalMaxPerRun').value=s.maxPerRun||80;
+      document.getElementById('globalTestMode').checked=s.testMode;
+      const badge=document.getElementById('reminderSystemStatus'),text=document.getElementById('reminderSafetyText'),btn=document.getElementById('reminderMasterButton');badge.className='system-badge';
+      if(!s.masterEnabled){badge.classList.add('off');badge.textContent='自動提醒已停止';text.textContent='目前不會自動寄信。立即提醒與退件通知仍需管理員手動確認。';btn.textContent='啟用自動提醒';btn.className='button button-primary';}
+      else if(s.testMode){badge.classList.add('test');badge.textContent='測試模式運作中';text.textContent='自動提醒只會寄測試摘要給管理員。';btn.textContent='停止所有自動提醒';btn.className='button button-danger';}
+      else{badge.classList.add('live');badge.textContent='正式提醒運作中';text.textContent='自動提醒會在指定日期寄給尚未完成的老師。';btn.textContent='停止所有自動提醒';btn.className='button button-danger';}
+    }
+
+    function saveGlobalReminderSettings(){
+      const d={testMode:document.getElementById('globalTestMode').checked,testEmail:document.getElementById('globalTestEmail').value.trim(),maxPerRun:Number(document.getElementById('globalMaxPerRun').value)};
+      api.run.withSuccessHandler(r=>{currentReminderSettings=r.settings;renderReminderCenter(r.settings);showToast(r.message)}).withFailureHandler(e=>showToast(getErrorMessage(e),'error')).saveReminderSettings(d);
+    }
+
+    function toggleReminderMaster(){
+      if(!currentReminderSettings)return;
+      api.run.withSuccessHandler(r=>{currentReminderSettings=r.settings;renderReminderCenter(r.settings);showToast(r.message)}).withFailureHandler(e=>showToast(getErrorMessage(e),'error')).setReminderMasterEnabled(!currentReminderSettings.masterEnabled);
+    }
+
+    function renderAdminTrainings(trainings){
+      const c=document.getElementById('adminTrainingList');c.innerHTML='';if(!trainings.length){c.innerHTML='<div class="empty">目前還沒有研習。</div>';return;}
+      trainings.forEach(t=>{
+        const card=document.createElement('div');card.className='admin-training-card';
+        const p=t.targetCount?Math.round(t.completedCount/t.targetCount*100):0;
+        const desc=t.description?`<div class="training-description">${escapeHtml(t.description)}</div>`:'';
+        const updateInfo=t.updatedAt?`<br>最後修改：${escapeHtml(t.updatedAt)}`:'';
+        const folder=t.requireCertificate&&t.folderId?`<a class="button button-outline" href="https://drive.google.com/drive/folders/${escapeHtml(t.folderId)}" target="_blank">收件資料夾</a>`:'';
+        const status=t.status==='ACTIVE'?`<button class="button button-danger" onclick="changeTrainingStatus('${escapeJs(t.id)}','INACTIVE')">關閉</button>`:`<button class="button button-success" onclick="changeTrainingStatus('${escapeJs(t.id)}','ACTIVE')">重新開放</button>`;
+        card.innerHTML=`<div class="training-main"><div class="training-title">${escapeHtml(t.title)}</div>${desc}<div class="training-meta">${escapeHtml(t.id)} ・截止 ${escapeHtml(formatDate(t.deadline))} ・對象：${escapeHtml(t.target==='ALL'?'全部人員':t.target)} ・${t.requireCertificate?'需上傳證明':'免上傳證明'}<br>${t.reminderEnabled?'自動提醒：截止前 '+t.reminderDaysBefore+' 天':'自動提醒：未啟用'}${updateInfo}</div><div class="progress-row"><div class="progress-track"><div class="progress-bar" style="width:${p}%"></div></div><div class="progress-text">${t.completedCount}/${t.targetCount} 人</div></div><div class="status ${t.status==='ACTIVE'?'status-completed':'status-inactive'}">${t.status==='ACTIVE'?'● 開放中':'● 已關閉'}</div></div><div class="actions"><button class="button button-primary" onclick="openTrainingDetail('${escapeJs(t.id)}')">完成名單</button><button class="button button-outline" onclick="openEditTrainingModal('${escapeJs(t.id)}')">編輯研習</button><button class="button button-outline" onclick="openTrainingReminderModal('${escapeJs(t.id)}')">提醒設定</button><button class="button button-outline" onclick="previewReminder('${escapeJs(t.id)}')">預覽自動提醒</button>${folder}${status}</div>`;
+        c.appendChild(card);
+      });
+    }
+
+    function openCreateTrainingModal(){
+      document.getElementById('createTrainingForm').reset();document.getElementById('newTrainingCertificate').checked=true;document.getElementById('newReminderEnabled').checked=false;document.getElementById('newReminderDays').value=7;document.getElementById('createTrainingError').style.display='none';document.getElementById('createTrainingModal').classList.add('show');
+    }
+    function closeCreateTrainingModal(){document.getElementById('createTrainingModal').classList.remove('show')}
+    function submitCreateTraining(e){
+      e.preventDefault();const b=document.getElementById('createTrainingButton'),err=document.getElementById('createTrainingError');
+      const d={title:document.getElementById('newTrainingTitle').value.trim(),description:document.getElementById('newTrainingDescription').value.trim(),url:document.getElementById('newTrainingUrl').value.trim(),deadline:document.getElementById('newTrainingDeadline').value,target:document.getElementById('newTrainingTarget').value,requireCertificate:document.getElementById('newTrainingCertificate').checked,reminderEnabled:document.getElementById('newReminderEnabled').checked,reminderDaysBefore:Number(document.getElementById('newReminderDays').value)};
+      err.style.display='none';b.disabled=true;b.textContent='發布中…';
+      api.run.withSuccessHandler(()=>{b.disabled=false;b.textContent='發布研習';closeCreateTrainingModal();showToast('研習已成功發布');loadAdminData()}).withFailureHandler(x=>{b.disabled=false;b.textContent='發布研習';err.textContent=getErrorMessage(x);err.style.display='block'}).createTraining(d);
+    }
+
+    function openEditTrainingModal(id){
+      const t=currentAdminTrainings.find(x=>x.id===id);if(!t)return;
+      document.getElementById('editTrainingId').value=t.id;document.getElementById('editTrainingSubtitle').textContent=t.id+' ・ '+t.title;document.getElementById('editTrainingTitle').value=t.title;document.getElementById('editTrainingDescription').value=t.description||'';document.getElementById('editTrainingUrl').value=t.url;document.getElementById('editTrainingDeadline').value=t.deadline;fillTargetSelect('editTrainingTarget',t.target);document.getElementById('editTrainingCertificate').checked=t.requireCertificate;document.getElementById('editReminderEnabled').checked=t.reminderEnabled;document.getElementById('editReminderDays').value=t.reminderDaysBefore;document.getElementById('editTrainingError').style.display='none';
+      const cert=document.getElementById('editTrainingCertificate'),hint=document.getElementById('editCertificateHint');
+      cert.disabled=Boolean(t.hasCompletions);hint.textContent=t.hasCompletions?'這場研習已有完成紀錄，因此「是否需要上傳證明」已鎖定，避免既有完成狀態混亂。':'尚無完成紀錄，可修改是否需要上傳證明。';
+      document.getElementById('editTrainingModal').classList.add('show');
+    }
+    function closeEditTrainingModal(){document.getElementById('editTrainingModal').classList.remove('show')}
+    function submitEditTraining(e){
+      e.preventDefault();const b=document.getElementById('editTrainingButton'),err=document.getElementById('editTrainingError');
+      const t=currentAdminTrainings.find(x=>x.id===document.getElementById('editTrainingId').value);if(!t)return;
+      const d={trainingId:t.id,title:document.getElementById('editTrainingTitle').value.trim(),description:document.getElementById('editTrainingDescription').value.trim(),url:document.getElementById('editTrainingUrl').value.trim(),deadline:document.getElementById('editTrainingDeadline').value,target:document.getElementById('editTrainingTarget').value,requireCertificate:document.getElementById('editTrainingCertificate').disabled?t.requireCertificate:document.getElementById('editTrainingCertificate').checked,reminderEnabled:document.getElementById('editReminderEnabled').checked,reminderDaysBefore:Number(document.getElementById('editReminderDays').value)};
+      err.style.display='none';b.disabled=true;b.textContent='儲存中…';
+      api.run.withSuccessHandler(r=>{b.disabled=false;b.textContent='儲存修改';closeEditTrainingModal();showToast(r.message);loadAdminData()}).withFailureHandler(x=>{b.disabled=false;b.textContent='儲存修改';err.textContent=getErrorMessage(x);err.style.display='block'}).updateTraining(d);
+    }
+
+    function openTrainingReminderModal(id){const t=currentAdminTrainings.find(x=>x.id===id);if(!t)return;document.getElementById('trainingReminderId').value=id;document.getElementById('trainingReminderTitle').textContent=t.title;document.getElementById('trainingReminderEnabled').checked=t.reminderEnabled;document.getElementById('trainingReminderDays').value=t.reminderDaysBefore;document.getElementById('trainingReminderModal').classList.add('show')}
+    function closeTrainingReminderModal(){document.getElementById('trainingReminderModal').classList.remove('show')}
+    function saveTrainingReminder(){const id=document.getElementById('trainingReminderId').value,en=document.getElementById('trainingReminderEnabled').checked,days=Number(document.getElementById('trainingReminderDays').value);api.run.withSuccessHandler(r=>{closeTrainingReminderModal();showToast(r.message);loadAdminData()}).withFailureHandler(e=>showToast(getErrorMessage(e),'error')).setTrainingReminder(id,en,days)}
+
+    function previewReminder(id){document.getElementById('previewTrainingId').value=id;document.getElementById('reminderPreviewContent').innerHTML='<div class="loading">正在計算提醒名單……</div>';document.getElementById('reminderPreviewModal').classList.add('show');api.run.withSuccessHandler(renderReminderPreview).withFailureHandler(e=>{document.getElementById('reminderPreviewContent').innerHTML=`<div class="form-error">${escapeHtml(getErrorMessage(e))}</div>`}).previewTrainingReminder(id)}
+    function renderReminderPreview(data){const list=data.pending.length?`<div class="preview-list">${data.pending.map(p=>`<div class="preview-person"><div><div class="preview-name">${escapeHtml(p.name)}</div><div class="preview-email">${escapeHtml(p.email)}</div></div></div>`).join('')}</div>`:'<div class="empty">所有人都已完成。</div>';document.getElementById('reminderPreviewContent').innerHTML=`<div class="info-box"><strong>${escapeHtml(data.training.title)}</strong><br>截止日期：${escapeHtml(data.training.deadline)}<br>提前提醒：${data.training.reminderDaysBefore} 天<br>預計提醒日期：${escapeHtml(data.reminderDate)}<br>尚未完成：<strong>${data.pendingCount}</strong> 人</div>${list}`}
+    function closeReminderPreviewModal(){document.getElementById('reminderPreviewModal').classList.remove('show')}
+    function sendReminderTest(){const id=document.getElementById('previewTrainingId').value,b=document.getElementById('sendTestReminderButton');b.disabled=true;b.textContent='寄送中…';api.run.withSuccessHandler(r=>{b.disabled=false;b.textContent='寄送測試摘要給我';showToast(r.message)}).withFailureHandler(e=>{b.disabled=false;b.textContent='寄送測試摘要給我';showToast(getErrorMessage(e),'error')}).sendTrainingReminderTest(id)}
+
+    function changeTrainingStatus(id,status){api.run.withSuccessHandler(r=>{showToast(r.message);loadAdminData()}).withFailureHandler(e=>showToast(getErrorMessage(e),'error')).setTrainingStatus(id,status)}
+
+    function openTrainingDetail(id){
+      hideAllPages();document.getElementById('trainingDetailPage').style.display='block';document.getElementById('trainingDetailHeader').innerHTML='<div class="loading">正在載入研習資料……</div>';document.getElementById('trainingMemberList').innerHTML='';document.getElementById('manualReminderPanel').style.display='none';document.getElementById('rejectPanel').style.display='none';window.scrollTo(0,0);
+      api.run.withSuccessHandler(timedReadSuccess_('detail',renderTrainingDetail)).withFailureHandler(timedReadFailure_(e=>{document.getElementById('trainingDetailHeader').innerHTML=`<div class="error">${escapeHtml(getErrorMessage(e))}</div>`})).getTrainingDetail(id);
+    }
+    function backToAdminPage(){hideAllPages();document.getElementById('adminPage').style.display='block';loadAdminData();window.scrollTo(0,0)}
+
+    function renderTrainingDetail(data){
+      currentDetailTraining=data.training;currentDetailMembers=data.members||[];canUploadForTeacher=Boolean(data.canUploadForTeacher);
+      document.getElementById('trainingDetailHeader').innerHTML=`<div class="detail-header"><h1 class="detail-title">${escapeHtml(data.training.title)}</h1><div class="detail-meta">研習編號：${escapeHtml(data.training.id)}<br>截止日期：${escapeHtml(formatDate(data.training.deadline))}<br>對象：${escapeHtml(data.training.target==='ALL'?'全部人員':data.training.target)}</div>${data.training.description?`<div class="detail-description">${escapeHtml(data.training.description)}</div>`:''}</div>`;
+      document.getElementById('detailPendingCount').textContent=data.summary.pending;document.getElementById('detailCompletedCount').textContent=data.summary.completed;document.getElementById('detailTotalCount').textContent=data.summary.total;
+      document.getElementById('manualReminderPanel').style.display=data.training.status==='ACTIVE'?'block':'none';
+      document.getElementById('rejectPanel').style.display=data.training.status==='ACTIVE'&&data.training.requireCertificate?'block':'none';
+      renderTrainingMembers(currentDetailMembers);clearManualReminderSelection();clearRejectSelection();
+    }
+
+    function renderTrainingMembers(members){
+      if(!members.length){document.getElementById('trainingMemberList').innerHTML='<div class="empty">沒有符合這場研習的教師。</div>';return;}
+      let rows='';
+      members.forEach(m=>{
+        let status='尚未完成',sc='pending';if(m.completionType==='SUBMITTED'){status='✓ 已繳交證明';sc='completed'}else if(m.completionType==='COMPLETED'){status='✓ 已完成研習';sc='completed'}
+        const reminderCheck=m.completed?'<span class="no-reminder-note">—</span>':`<input class="member-check manual-reminder-check" type="checkbox" value="${escapeHtml(m.email)}" onchange="updateManualReminderSelection()">`;
+        const rejectCheck=m.canReject?`<input class="member-check reject-check" type="checkbox" value="${escapeHtml(m.email)}" onchange="updateRejectSelection()">`:'<span class="no-reminder-note">—</span>';
+        const remindStatus=m.completed?'<span class="no-reminder-note">不需提醒</span>':m.remindedToday?`<span class="reminder-today-note">今天 ${escapeHtml(getTimeOnly(m.lastReminderAt))} 已提醒</span>`:'<span class="no-reminder-note">今天尚未提醒</span>';
+        const file=m.fileId?`<a class="button button-outline small-button" href="https://drive.google.com/file/d/${escapeHtml(m.fileId)}/view" target="_blank">查看證明</a>`:'—';
+        const delegate=canUploadForTeacher&&currentDetailTraining.status==='ACTIVE'&&currentDetailTraining.requireCertificate?`<button class="button button-outline small-button" onclick="openDelegatedUpload('${escapeHtml(escapeJs(m.email))}')">代傳證明</button>`:'';
+        const rejected=m.rejectedAt&&!m.completed?`<div class="no-reminder-note" style="margin-top:4px">曾退件：${escapeHtml(m.rejectedAt)}${m.rejectionReason?' · '+escapeHtml(m.rejectionReason):''}</div>`:'';
+        rows+=`<tr><td>${reminderCheck}</td><td>${rejectCheck}</td><td><div class="member-name">${escapeHtml(m.name)}</div><div class="member-email">${escapeHtml(m.email)}</div></td><td>${escapeHtml(m.group||'未分類')}</td><td><span class="member-status ${sc}">${status}</span>${rejected}</td><td>${remindStatus}</td><td>${m.completedAt?escapeHtml(m.completedAt):'—'}</td><td>${file}${delegate}</td></tr>`;
+      });
+      document.getElementById('trainingMemberList').innerHTML=`<div class="member-table-wrapper"><table class="member-table"><thead><tr><th>提醒</th><th>退件</th><th>教師</th><th>群組</th><th>完成狀態</th><th>提醒狀態</th><th>完成時間</th><th>證明</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+
+    function getCheckedValues(selector){return Array.from(document.querySelectorAll(selector+':checked')).map(x=>x.value)}
+    function selectAllPendingMembers(){document.querySelectorAll('.manual-reminder-check').forEach(x=>x.checked=true);updateManualReminderSelection()}
+    function clearManualReminderSelection(){document.querySelectorAll('.manual-reminder-check').forEach(x=>x.checked=false);updateManualReminderSelection()}
+    function updateManualReminderSelection(){const n=getCheckedValues('.manual-reminder-check').length;document.getElementById('selectedReminderCount').textContent='已選 '+n+' 人';document.getElementById('sendSelectedReminderButton').disabled=n===0}
+    function selectAllRejectableMembers(){document.querySelectorAll('.reject-check').forEach(x=>x.checked=true);updateRejectSelection()}
+    function clearRejectSelection(){document.querySelectorAll('.reject-check').forEach(x=>x.checked=false);updateRejectSelection()}
+    function updateRejectSelection(){const n=getCheckedValues('.reject-check').length;document.getElementById('selectedRejectCount').textContent='已選 '+n+' 人';document.getElementById('rejectSelectedButton').disabled=n===0}
+
+    function openManualReminderPreview(){
+      const emails=getCheckedValues('.manual-reminder-check');if(!currentDetailTraining||!emails.length)return;
+      document.getElementById('manualReminderPreviewContent').innerHTML='<div class="loading">正在重新確認完成狀態……</div>';document.getElementById('confirmManualReminderButton').disabled=true;document.getElementById('manualReminderModal').classList.add('show');
+      api.run.withSuccessHandler(renderManualReminderPreview).withFailureHandler(e=>{document.getElementById('manualReminderPreviewContent').innerHTML=`<div class="form-error">${escapeHtml(getErrorMessage(e))}</div>`}).previewManualReminder(currentDetailTraining.id,emails);
+    }
+    function renderManualReminderPreview(data){
+      pendingManualRecipients=data.recipients||[];pendingManualTrainingId=data.training.id;pendingManualRequestId=createRequestId();
+      const btn=document.getElementById('confirmManualReminderButton');btn.disabled=!pendingManualRecipients.length;btn.textContent=pendingManualRecipients.length?'確認寄送 '+pendingManualRecipients.length+' 封':'沒有可寄送對象';
+      const warning=data.remindedTodayCount?`<div class="warning-box">其中有 <strong>${data.remindedTodayCount}</strong> 位老師今天已收到過提醒，請確認是否仍要再次寄送。</div>`:'';
+      const skipped=data.skippedCompletedCount?`<div class="info-box">有 ${data.skippedCompletedCount} 位老師已完成，系統已自動排除。</div>`:'';
+      const list=`<div class="preview-list">${pendingManualRecipients.map(p=>`<div class="preview-person"><div><div class="preview-name">${escapeHtml(p.name)}</div><div class="preview-email">${escapeHtml(p.email)}</div></div>${p.remindedToday?`<span class="reminder-today-note">今天 ${escapeHtml(getTimeOnly(p.lastReminderAt))} 已提醒</span>`:'<span class="no-reminder-note">今天尚未提醒</span>'}</div>`).join('')}</div>`;
+      document.getElementById('manualReminderPreviewContent').innerHTML=`<div class="info-box">研習：<strong>${escapeHtml(data.training.title)}</strong><br>本次預計正式寄送：<strong>${data.recipientCount}</strong> 人<br>Google 今日剩餘額度：${data.dailyQuota}<br>單次安全上限：${data.maxPerRun}</div>${warning}${skipped}${list}`;
+    }
+    function closeManualReminderModal(){document.getElementById('manualReminderModal').classList.remove('show');pendingManualRecipients=[];pendingManualTrainingId='';pendingManualRequestId=''}
+    function confirmManualReminderSend(){
+      if(!pendingManualTrainingId||!pendingManualRecipients.length)return;const btn=document.getElementById('confirmManualReminderButton'),id=pendingManualTrainingId,emails=pendingManualRecipients.map(x=>x.email),requestId=pendingManualRequestId;btn.disabled=true;btn.textContent='寄送中…';
+      api.run.withSuccessHandler(r=>{closeManualReminderModal();showToast(r.message);openTrainingDetail(id)}).withFailureHandler(e=>{btn.disabled=false;btn.textContent='確認寄送';showToast(getErrorMessage(e),'error')}).sendManualReminders(id,emails,requestId);
+    }
+
+    function openRejectPreview(){
+      const emails=getCheckedValues('.reject-check');if(!currentDetailTraining||!emails.length)return;
+      document.getElementById('rejectPreviewContent').innerHTML='<div class="loading">正在確認退件資料……</div>';document.getElementById('rejectReason').value='';document.getElementById('rejectNotify').checked=false;document.getElementById('confirmRejectButton').disabled=true;document.getElementById('rejectModal').classList.add('show');
+      api.run.withSuccessHandler(renderRejectPreview).withFailureHandler(e=>{document.getElementById('rejectPreviewContent').innerHTML=`<div class="form-error">${escapeHtml(getErrorMessage(e))}</div>`}).previewSubmissionRejection(currentDetailTraining.id,emails);
+    }
+    function renderRejectPreview(data){
+      pendingRejectRecipients=data.recipients||[];pendingRejectTrainingId=data.training.id;const btn=document.getElementById('confirmRejectButton');btn.disabled=!pendingRejectRecipients.length;btn.textContent=pendingRejectRecipients.length?'確認退回 '+pendingRejectRecipients.length+' 人':'沒有可退件對象';
+      document.getElementById('rejectPreviewContent').innerHTML=`<div class="info-box">研習：<strong>${escapeHtml(data.training.title)}</strong><br>本次將退回：<strong>${data.recipientCount}</strong> 人</div><div class="preview-list">${pendingRejectRecipients.map(p=>`<div class="preview-person"><div><div class="preview-name">${escapeHtml(p.name)}</div><div class="preview-email">${escapeHtml(p.email)}${p.fileName?' · '+escapeHtml(p.fileName):''}</div></div></div>`).join('')}</div>`;
+    }
+    function closeRejectModal(){document.getElementById('rejectModal').classList.remove('show');pendingRejectRecipients=[];pendingRejectTrainingId=''}
+    function confirmRejectSubmissions(){
+      if(!pendingRejectTrainingId||!pendingRejectRecipients.length)return;const btn=document.getElementById('confirmRejectButton'),id=pendingRejectTrainingId,emails=pendingRejectRecipients.map(x=>x.email),reason=document.getElementById('rejectReason').value.trim(),notify=document.getElementById('rejectNotify').checked;btn.disabled=true;btn.textContent='退件處理中…';
+      api.run.withSuccessHandler(r=>{closeRejectModal();showToast(r.message);openTrainingDetail(id)}).withFailureHandler(e=>{btn.disabled=false;btn.textContent='確認退件';showToast(getErrorMessage(e),'error')}).rejectSubmissions(id,emails,reason,notify);
+    }
+
+    function prepareUploadDialog(training,teacher){
+      if(uploadBusy)return;
+      uploadAttempted=false;uploadFileChanged=false;
+      uploadDelegated=Boolean(teacher);
+      document.getElementById('uploadTrainingId').value=training.id;
+      document.getElementById('uploadTargetEmail').value=teacher?teacher.email:'';
+      document.getElementById('uploadExpectedFileId').value=(teacher?teacher.fileId:training.fileId)||'';
+      document.getElementById('uploadRequestId').value=createRequestId();
+      document.getElementById('uploadTrainingTitle').textContent=training.title+(teacher?' — '+teacher.name+' ('+teacher.email+')':'');
+      const notice=document.getElementById('uploadReplacementNotice');
+      notice.textContent='此教師已有證明。確認上傳將取代原檔；成功後原檔移到垃圾桶。';
+      notice.style.display=document.getElementById('uploadExpectedFileId').value?'block':'none';
+      document.getElementById('certificateFile').value='';
+      document.getElementById('selectedFileName').textContent='PDF、JPG 或 PNG，最大 10 MB';
+      document.getElementById('uploadError').style.display='none';
+      const button=document.getElementById('uploadSubmitButton');button.disabled=false;button.textContent=teacher?'確認代傳證明':'上傳證明';
+      document.getElementById('uploadModal').classList.add('show');
+    }
+    function openUploadModal(id){const t=currentTrainings.find(x=>x.id===id);if(t)prepareUploadDialog(t,null)}
+    function openDelegatedUpload(email){
+      if(!canUploadForTeacher||!currentDetailTraining||currentDetailTraining.status!=='ACTIVE'||!currentDetailTraining.requireCertificate)return;
+      const teacher=currentDetailMembers.find(m=>m.email===email);if(teacher)prepareUploadDialog(currentDetailTraining,teacher);
+    }
+    function closeUploadModal(){if(!uploadBusy)document.getElementById('uploadModal').classList.remove('show')}
+    function showSelectedFile(){const i=document.getElementById('certificateFile');document.getElementById('selectedFileName').textContent=i.files.length?i.files[0].name:'PDF、JPG 或 PNG，最大 10 MB';if(uploadAttempted){uploadFileChanged=true;showUploadError('已嘗試提交後更換檔案，請關閉視窗並重新整理名單，再確認上傳。')}}
+    function submitCertificate(e){
+      e.preventDefault();if(uploadBusy)return;
+      if(uploadFileChanged){showUploadError('已更換檔案，請關閉視窗並重新整理名單，再確認上傳。');return}
+      const form=document.getElementById('uploadForm'),input=document.getElementById('certificateFile'),button=document.getElementById('uploadSubmitButton');
+      if(!input.files.length){showUploadError('請先選擇檔案。');return}
+      if(input.files[0].size>10*1024*1024){showUploadError('檔案超過 10 MB。');return}
+      if(document.getElementById('uploadExpectedFileId').value&&!window.confirm('確定取代「'+document.getElementById('uploadTrainingTitle').textContent+'」的現有證明？成功後原檔將移到垃圾桶。'))return;
+      const delegated=uploadDelegated,trainingId=document.getElementById('uploadTrainingId').value;
+      uploadAttempted=true;uploadBusy=true;button.disabled=true;button.textContent='上傳中…';
+      const reset=()=>{uploadBusy=false;button.disabled=false;input.disabled=false;button.textContent=delegated?'確認代傳證明':'上傳證明'};
+      const runner=api.run.withSuccessHandler(r=>{
+        reset();if(!r||!r.success){showUploadError('未能確認上傳成功，請重新整理確認。');return}
+        closeUploadModal();showToast(r.message||'研習證明已成功上傳');
+        if(delegated)openTrainingDetail(trainingId);else loadDashboard();
+      }).withFailureHandler(error=>{reset();showUploadError('上傳失敗：'+getErrorMessage(error))});
+      if(delegated)runner.uploadCertificateForTeacher(form);else runner.uploadCertificate(form);
+    }
+
+    function showUploadError(msg){const a=document.getElementById('uploadError');a.textContent=msg;a.style.display='block'}
+
+    function openHelpPage(){for(const id of ['dashboardPage','adminPage','trainingDetailPage']){const e=document.getElementById(id);if(e&&getComputedStyle(e).display!=='none'){pageBeforeHelp=id;break}}hideAllPages();document.getElementById('helpPage').style.display='block';window.scrollTo(0,0)}
+    function closeHelpPage(){hideAllPages();const p=document.getElementById(pageBeforeHelp);if(p)p.style.display='block';window.scrollTo(0,0)}
+    function hideAllPages(){['dashboardPage','adminPage','trainingDetailPage','helpPage'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none'})}
+
+    function showToast(msg,type='success'){const t=document.getElementById('toast'),i=document.getElementById('toastIcon');t.classList.remove('error-toast');if(type==='error'){t.classList.add('error-toast');i.textContent='!'}else{i.textContent='✓'}document.getElementById('toastMessage').textContent=msg;t.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3200)}
+    function formatDate(s){if(!s)return'未設定';const p=s.split('-');return p.length===3?Number(p[1])+'/'+Number(p[2]):s}
+    function getDeadlineInfo(s){if(!s)return{text:'未設定',className:''};const now=new Date();now.setHours(0,0,0,0);const d=new Date(s+'T00:00:00');const diff=Math.round((d-now)/86400000);if(diff<0)return{text:'已逾期 '+Math.abs(diff)+' 天',className:'overdue'};if(diff===0)return{text:'今天截止',className:'soon'};if(diff<=7)return{text:diff+' 天後截止',className:'soon'};return{text:diff+' 天後截止',className:''}}
+    function getTimeOnly(v){if(!v)return'';const p=String(v).split(' ');return p.length>=2?p[1]:v}
+    function createRequestId(){return window.crypto&&typeof window.crypto.randomUUID==='function'?window.crypto.randomUUID():'MANUAL_'+Date.now()+'_'+Math.random().toString(36).slice(2)}
+    function escapeHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+    function escapeJs(v){return String(v||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+    function getErrorMessage(e){if(!e)return'發生未知錯誤';if(typeof e==='string')return e;return e.message||'發生未知錯誤'}
+    function showSystemError(e){document.getElementById('loading').style.display='none';showError(getErrorMessage(e))}
+    function showError(msg){document.getElementById('app').style.display='none';document.getElementById('errorArea').style.display='block';document.getElementById('errorMessage').textContent=msg}
+  </script>
+</body>
+</html>
